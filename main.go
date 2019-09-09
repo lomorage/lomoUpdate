@@ -26,7 +26,7 @@ import (
 )
 
 // LomoUpdateVersion lomoUpdate version auto generated
-const LomoUpdateVersion = "2019_09_08.16_48_47.0.c527207"
+const LomoUpdateVersion = "2019_09_08.17_36_36.0.5c3ad0f"
 
 type platform struct {
 	URL      string
@@ -97,6 +97,12 @@ func main() {
 			Usage: "PostCmdArgs for upgrading",
 			Value: "c:/lomoagent.exe",
 		},
+
+		cli.StringFlag{
+			Name:  "log-dir, l",
+			Usage: "logfile directory",
+			Value: dir,
+		},
 	}
 
 	app.Action = bootService
@@ -107,6 +113,24 @@ func main() {
 }
 
 func bootService(ctx *cli.Context) error {
+
+	if ctx.String("app-dir") == "" {
+		return errors.New("invalid log dir")
+	}
+	logFile := filepath.Join(ctx.String("log-dir"), "lomoupg.log")
+	logFileHandler, err := os.OpenFile(logFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	Formatter := new(log.TextFormatter)
+	Formatter.TimestampFormat = "2006-02-02 15:04:06"
+	Formatter.FullTimestamp = true
+	log.SetFormatter(Formatter)
+	if err != nil {
+		// Cannot open log file. Logging to stderr
+		fmt.Println(err)
+	} else {
+		mw := io.MultiWriter(os.Stdout, logFileHandler)
+		log.SetOutput(mw)
+	}
+
 	if ctx.String("app-dir") == "" {
 		return errors.New("invalid app dir")
 	}
@@ -118,15 +142,15 @@ func bootService(ctx *cli.Context) error {
 	}
 	p, err := downloadReleaseMeta(ctx.String("url"))
 	if err != nil {
-		fmt.Println("downloadReleaseMeta error")
+		log.Errorf("downloadReleaseMeta error, %v", err)
 		return err
 	}
 	if p.Version == ctx.String("curr-version") {
-		fmt.Println("No new version, skip upgrade")
+		log.Info("No new version, skip upgrade")
 		return nil
 	}
 
-	fmt.Println("Got new version, start upgrade")
+	log.Info("Got new version, start upgrade")
 
 	tempRoot := ctx.String("backup-dir")
 	if tempRoot == "" {
@@ -151,23 +175,23 @@ func bootService(ctx *cli.Context) error {
 	tempPreCmd := ctx.String("precmd")
 	tempPreCmdArg := ctx.String("precmdarg")
 
-	fmt.Println("start preUpgrade...")
+	log.Info("start preUpgrade...")
 
 	if err := preUpgrade(tempPreCmd, tempPreCmdArg); err != nil {
 		// return err
-		fmt.Println("preUpgrade fail...")
+		log.Errorf("preUpgrade fail..., %v", err)
 	}
 
-	fmt.Println("start upgrade...")
+	log.Info("start upgrade...")
 	if err := upgrade(ctx.String("app-dir"), tempRoot, tempUncompress); err != nil {
-		fmt.Println("upgrade fail...")
+		log.Errorf("upgrade fail..., %v", err)
 		// return err
 	}
 
 	tempPostCmd := ctx.String("postcmd")
 	tempPostCmdArg := ctx.String("postcmdarg")
 
-	fmt.Println("start postUpgrade...")
+	log.Info("start postUpgrade...")
 	return postUpgrade(tempPostCmd, tempPostCmdArg)
 }
 

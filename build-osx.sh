@@ -12,7 +12,7 @@ sed -i ".bak" -E "s/[[:digit:]]{4}_[[:digit:]]{2}_[[:digit:]]{2}\.[[:digit:]]{2}
 versionNew=$(grep "const LomoUpdateVersion" main.go)
 echo "new verion: $versionNew"
 
-go build
+go build -o lomoupg
 
-zip -r lomoUpdateOSX.zip lomoUpdate
+zip -r lomoUpdateOSX.zip lomoupg
 shasum -a256 lomoUpdateOSX.zip
