@@ -111,5 +111,10 @@ RELEASE_VERSION=$(awk -F "\"" '/[[:digit:]]{4}_[[:digit:]]{2}_[[:digit:]]{2}\.[[
 CONTENT="$RELEASE_VERSION$CONTENT"
 echo "$CONTENT"
 
-hub release create -a LomoUpdateOSX.zip -m "$CONTENT" $RELEASE_VERSION
+PLATFORM=$1
+if [ "$PLATFORM" == "win" ]; then
+	hub release create -a LomoUpdateWin.zip -m "$CONTENT" $RELEASE_VERSION
+else
+	hub release create -a LomoUpdateOSX.zip -m "$CONTENT" $RELEASE_VERSION
+fi
 
