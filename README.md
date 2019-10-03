@@ -10,4 +10,4 @@ run PS as admin: in PS shell:
 
 then run on git-bash shell:
 
-> ./build-osx.sh win
+> ./build.sh win
