@@ -26,7 +26,7 @@ import (
 )
 
 // LomoUpdateVersion lomoUpdate version auto generated
-const LomoUpdateVersion = "2019_09_08.17_36_36.0.5c3ad0f"
+const LomoUpdateVersion = "2019_12_09.23_33_26.0.b5aeabd"
 
 type platform struct {
 	URL      string
@@ -46,59 +46,60 @@ func main() {
 	app := cli.NewApp()
 
 	app.Version = LomoUpdateVersion
-	app.Usage = "personal photo backup solution backend daemon"
-	app.Email = "leslie.qiwa@gmail.com"
+	app.Usage = "Lomorage upgrade app"
+
+	app.Authors = []*cli.Author{
+		&cli.Author{
+			Name:  "Jeromy Fu",
+			Email: "fuji246@gmail.com",
+		},
+	}
 
 	dir, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
 	}
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "app-dir, a",
 			Usage: "app directory to uncompress lomorage zip",
 			Value: dir,
 		},
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "backup-dir, b",
 			Usage: "directory to back up downloaded zip file and old release",
 		},
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "curr-version, c",
 			Usage: "current version of lomorage app",
 			Value: dir,
 		},
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "url, u",
 			Usage: "url for release json",
 			Value: "http://lomorage.github.io/release.json",
 		},
-
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "precmd, prc",
 			Usage: "PreCmd for upgrading",
 			Value: "c:/stopLomoagent.bat",
 		},
-
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "precmdarg, prca",
 			Usage: "PreCmd args for upgrading",
 			Value: "",
 		},
-
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "postcmd, psc",
 			Usage: "PostCmd for upgrading",
 			Value: "c:/startLomoagent.bat",
 		},
-
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "postcmdarg, psca",
 			Usage: "PostCmdArgs for upgrading",
 			Value: "c:/lomoagent.exe",
 		},
-
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "log-dir, l",
 			Usage: "logfile directory",
 			Value: dir,
@@ -312,13 +313,17 @@ func preUpgrade(preCmd string, preCmdArg string) error {
 
 func upgrade(appDir, bakDir, downloadDir string) error {
 	now := time.Now()
-	if err := os.Rename(appDir,
-		filepath.Join(bakDir, fmt.Sprintf("lomod-bak-%d%02d%02d_%02d%02d%02d", now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second()))); err != nil {
+	tmpFolder := fmt.Sprintf("lomod-bak-%d%02d%02d_%02d%02d%02d", now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second())
+	tmpFolderPath := filepath.Join(bakDir, tmpFolder)
+	log.Infof("rename %v to %v", appDir, tmpFolderPath)
+	if err := os.Rename(appDir, tmpFolderPath); err != nil {
 		return err
 	}
 
 	// move new one to specified app-dir
-	return os.Rename(downloadDir, appDir)
+	newAppPath := filepath.Join(downloadDir, filepath.Base(appDir))
+	log.Infof("rename %v to %v", newAppPath, appDir)
+	return os.Rename(newAppPath, appDir)
 }
 
 func postUpgrade(postCmd string, postCmdArg string) error {
