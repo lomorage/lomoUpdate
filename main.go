@@ -26,7 +26,7 @@ import (
 )
 
 // LomoUpdateVersion lomoUpdate version auto generated
-const LomoUpdateVersion = "2019_12_09.23_33_26.0.b5aeabd"
+const LomoUpdateVersion = "2019_12_09.23_41_36.0.b28a902"
 
 type platform struct {
 	URL      string
